@@ -149,7 +149,7 @@ public class PolyLinesDrawingArea extends javax.swing.JPanel {
     }//GEN-LAST:event_formMouseMoved
 
     private void formKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyTyped
-        if(evt.getKeyChar()=="Space"){
+        if(evt.getKeyChar()==' '){
             spaceKeyTyped(evt);
         }
     }//GEN-LAST:event_formKeyTyped

@@ -17,20 +17,28 @@ import java.awt.event.ActionListener;
 public class FeuxPieton extends javax.swing.JFrame {
 
     private enum STATE {
-        E0(true, false, false, false),
-        E1(false, true, true, false),
-        E2(false, true, false, true);
+        E0(true, false, false, false,false,false),
+        E1(false, true, true, false,false,false),
+        E2(false, true, false, true,false,false),
+
+        E3(false, true, false, false,true,false),
+
+        E4(false, true, false, false,false,true);
 
         private boolean startButtonActive;
         private boolean stopButtonActive;
         private boolean timerVertActive;
         private boolean timerRougeActive;
+        private boolean timerRougeClignotantEteintActive;
+        private boolean timerRougeClignotantAllumeActive;
 
-        STATE(boolean startButtonActive, boolean stopButtonActive, boolean timerVertActive, boolean timerRougeActive) {
-            this.startButtonActive = startButtonActive;
-            this.stopButtonActive = stopButtonActive;
-            this.timerVertActive = timerVertActive;
-            this.timerRougeActive = timerRougeActive;
+        STATE (boolean startButtonActive, boolean stopButtonActive, boolean timerVertActive, boolean timerRougeActive, boolean timerRougeClignotantEteintActive, boolean timerRougeClignotantAllumeActive){
+            this.startButtonActive=startButtonActive;
+            this.stopButtonActive=stopButtonActive;
+            this.timerVertActive=timerVertActive;
+            this.timerRougeActive=timerRougeActive;
+            this.timerRougeClignotantEteintActive=timerRougeClignotantEteintActive;
+            this.timerRougeClignotantAllumeActive=timerRougeClignotantAllumeActive;
         }
 
         public boolean isStartButtonActive() {
@@ -48,11 +56,22 @@ public class FeuxPieton extends javax.swing.JFrame {
         public boolean isTimerRougeActive() {
             return timerRougeActive;
         }
+
+        public boolean isTimerRougeClignotantEteintActive() {
+            return timerRougeClignotantEteintActive;
+        }
+
+        public boolean isTimerRougeClignotantAllumeActive() {
+            return timerRougeClignotantAllumeActive;
+        }
     }
 
     private STATE etat;
     private Timer timerVert;
     private Timer timerRouge;
+    private Timer timerRougeClignotantEteint;
+    private Timer timerRougeClignotantAllume;
+    private int compteur=0;
 
     private void initAmpoules(){
         this.ampouleRouge.setColor(Color.RED);
@@ -60,15 +79,29 @@ public class FeuxPieton extends javax.swing.JFrame {
     }
 
     private void initTimer(){
-        timerVert = new Timer(5000, new ActionListener() {
+        timerVert = new Timer(1000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 timerVertAction(e);            }
         });
-        timerRouge = new Timer(3000, new ActionListener() {
+        timerRouge = new Timer(1000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 timerRougeAction(e);
+            }
+        });
+
+        timerRougeClignotantEteint = new Timer(250, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                timerRougeClignotantEteintAction(e);
+            }
+        });
+
+        timerRougeClignotantAllume = new Timer(250, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                timerRougeClignotantAllumeAction(e);
             }
         });
     }
@@ -81,10 +114,30 @@ public class FeuxPieton extends javax.swing.JFrame {
     }
 
     private void timerRougeAction(ActionEvent e){
-        ampouleVerte.turnON();
         ampouleRouge.turnOFF();
-        etat=STATE.E2;
+        etat=STATE.E3;
         updateStatement();
+    }
+
+    private void timerRougeClignotantEteintAction(ActionEvent e){
+        ampouleRouge.turnON();
+        etat=STATE.E4;
+        updateStatement();
+    }
+
+    private void timerRougeClignotantAllumeAction(ActionEvent e){
+       if(compteur<2){
+           ampouleRouge.turnOFF();
+           compteur++;
+           etat=STATE.E3;
+           updateStatement();
+       }else{
+           System.out.println("compteur=2"+compteur);
+           ampouleRouge.turnOFF();
+           ampouleVerte.turnON();
+           etat=STATE.E1;
+           updateStatement();
+       }
     }
 
     private void updateStatement(){
@@ -101,10 +154,23 @@ public class FeuxPieton extends javax.swing.JFrame {
         }else{
             timerRouge.stop();
         }
+
+        if(this.etat.isTimerRougeClignotantEteintActive()){
+            timerRougeClignotantEteint.start();
+        }else{
+            timerRougeClignotantEteint.stop();
+        }
+
+        if(this.etat.isTimerRougeClignotantAllumeActive()){
+            timerRougeClignotantAllume.start();
+        }else{
+            timerRougeClignotantAllume.stop();
+        }
     }
     private void initStateMachine(){
         initTimer();
         initAmpoules();
+        compteur=0;
         etat=STATE.E0;
         updateStatement();
     }
@@ -209,6 +275,7 @@ public class FeuxPieton extends javax.swing.JFrame {
                 ampouleVerte.turnOFF();
                 ampouleRouge.turnOFF();
                 etat=STATE.E0;
+                compteur=0;
                 updateStatement();
             }
         }
@@ -263,5 +330,7 @@ public class FeuxPieton extends javax.swing.JFrame {
     private revision.Ampoule ampouleVerte;
     private javax.swing.JButton startButton;
     private javax.swing.JButton stopButton;
+
+
     // End of variables declaration//GEN-END:variables
 }
